@@ -18,6 +18,7 @@ CHUNK_SIZE_TOKENS = 500
 CHUNK_OVERLAP_TOKENS = 50
 
 TOP_K = 5
+MAX_AGGREGATE_CHUNKS = 80  # cap for whole-document questions (counts, "list all", etc.)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")

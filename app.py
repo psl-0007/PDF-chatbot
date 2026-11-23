@@ -33,6 +33,22 @@ with st.sidebar:
                 st.success(f"{filename}: {num_chunks} chunks added")
 
     st.divider()
+    st.header("Ingested documents")
+    try:
+        filenames = sorted({m["filename"] for m in collection.get(include=["metadatas"])["metadatas"]})
+    except Exception:
+        filenames = []
+
+    if not filenames:
+        st.caption("No documents ingested yet.")
+    for filename in filenames:
+        file_col, remove_col = st.columns([4, 1])
+        file_col.write(filename)
+        if remove_col.button("✕", key=f"remove_{filename}", help=f"Remove {filename}"):
+            collection.delete(where={"filename": filename})
+            st.rerun()
+
+    st.divider()
     try:
         count = collection.count()
     except Exception:
