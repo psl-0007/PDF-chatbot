@@ -3,9 +3,23 @@ import os
 from pathlib import Path
 
 import chromadb
+import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _get_setting(key: str, default: str = None) -> str:
+    """Read a setting from the environment (.env locally) or Streamlit secrets
+    (st.secrets, used on Streamlit Community Cloud), in that order."""
+    value = os.environ.get(key)
+    if value:
+        return value
+    try:
+        return st.secrets.get(key, default)
+    except Exception:
+        return default
+
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -20,8 +34,8 @@ CHUNK_OVERLAP_TOKENS = 50
 TOP_K = 5
 MAX_AGGREGATE_CHUNKS = 80  # cap for whole-document questions (counts, "list all", etc.)
 
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_API_KEY = _get_setting("GROQ_API_KEY")
+GROQ_MODEL = _get_setting("GROQ_MODEL", "openai/gpt-oss-120b")
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
 _client = None
