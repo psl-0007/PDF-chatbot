@@ -1,0 +1,8 @@
+streamlit
+pymupdf
+langchain-text-splitters
+sentence-transformers
+chromadb>=1.0
+tiktoken
+openai
+python-dotenv
