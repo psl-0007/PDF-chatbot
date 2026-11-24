@@ -78,16 +78,44 @@ def build_prompt(query: str, chunks: list[RetrievedChunk]) -> str:
         "context provided below. If the answer is not contained in the "
         "context, say you don't know based on the provided documents. Do "
         "not use outside knowledge.\n\n"
-        "Formatting rules: write in plain Markdown. For any math, wrap "
-        "inline expressions in single dollar signs, e.g. $x = 5$, and "
-        "standalone equations in double dollar signs, e.g. $$x + 2 = 7$$. "
-        "Never use raw LaTeX delimiters like [ ] or \\[ \\], and never use "
-        "\\qquad, \\Longrightarrow, or \\tag — instead connect steps with "
-        "plain words like 'so' or 'therefore', each on its own line.\n\n"
+        "Formatting rules: write entirely in plain prose and plain Markdown. "
+        "Do not use any LaTeX at all — no $, $$, \\boxed, \\tag, \\qquad, "
+        "\\Longrightarrow, \\[ \\], or bracket-delimited equations. Write "
+        "every equation as normal inline text, e.g. '2l - 5b = -70', and "
+        "label important ones in parentheses like '... (i)' or '... (ii)' "
+        "instead of \\tag. Connect reasoning steps with ordinary words like "
+        "'so' or 'then'. Use **bold** only for final answers or key "
+        "results, and a ✓ when verifying a condition holds. For a "
+        "multi-step problem, structure the answer with short sections "
+        "(e.g. Setup, Solve, Check, Answer).\n\n"
         f"Context:\n{context}\n\n"
         f"Question: {query}\n\n"
         "Answer:"
     )
+
+
+_LATEX_CLEANUP = [
+    (r"\\\[|\\\]|\\\(|\\\)", ""),
+    (r"\\boxed\{([^{}]*)\}", r"**\1**"),
+    (r"\\tag\{([^{}]*)\}", r" (\1)"),
+    (r"\\text\{([^{}]*)\}", r"\1"),
+    (r"\\Longrightarrow|\\implies", " so "),
+    (r"\\times", "×"),
+    (r"\\cdot", "·"),
+    (r"\\bigl|\\bigr|\\Bigl|\\Bigr|\\big|\\Big", ""),
+    (r"\\qquad|\\quad", "  "),
+    (r"\\;|\\,|\\!", " "),
+]
+
+
+def _strip_latex_artifacts(text: str) -> str:
+    """Models sometimes ignore the prompt's plain-prose instruction and emit raw
+    LaTeX anyway; clean up the common commands as a deterministic fallback."""
+    for pattern, replacement in _LATEX_CLEANUP:
+        text = re.sub(pattern, replacement, text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 
 def call_llm(prompt: str) -> str:
@@ -96,10 +124,10 @@ def call_llm(prompt: str) -> str:
     client = OpenAI(api_key=config.GROQ_API_KEY, base_url=config.GROQ_BASE_URL)
     response = client.chat.completions.create(
         model=config.GROQ_MODEL,
-        max_tokens=1024,
+        max_tokens=2048,
         messages=[{"role": "user", "content": prompt}],
     )
-    return response.choices[0].message.content
+    return _strip_latex_artifacts(response.choices[0].message.content)
 
 
 def answer_query(query: str, collection=None, top_k: int = None) -> dict:
