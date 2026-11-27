@@ -1,2 +1,17 @@
 [client]
 toolbarMode = "minimal"
+
+# Palette: Ivory cream / Navy blue / Olive green / Crimson red
+# (the app overrides these at runtime for dark mode; see assets/style.css)
+[theme]
+base = "light"
+primaryColor = "#55622D"            # olive green  - buttons, focus, toggles
+backgroundColor = "#FAF6EC"         # ivory cream  - page
+secondaryBackgroundColor = "#F2ECDB" # deeper cream - inputs, cards
+textColor = "#1B2A49"               # navy blue    - ink
+font = "serif"
+
+[theme.sidebar]
+backgroundColor = "#F2ECDB"
+secondaryBackgroundColor = "#FAF6EC"
+textColor = "#1B2A49"
