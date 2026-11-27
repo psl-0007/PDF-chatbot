@@ -38,16 +38,15 @@ GROQ_API_KEY = _get_setting("GROQ_API_KEY")
 GROQ_MODEL = _get_setting("GROQ_MODEL", "openai/gpt-oss-120b")
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
-_client = None
-
-
+@st.cache_resource
 def get_chroma_client() -> chromadb.ClientAPI:
-    global _client
-    if _client is None:
-        _client = chromadb.PersistentClient(path=CHROMA_DIR)
-    return _client
+    """Cached by Streamlit so concurrent script reruns share one client instead
+    of racing to construct it (a bare module-global was not thread-safe and
+    could trigger a KeyError inside chromadb's internal system-client cache)."""
+    return chromadb.PersistentClient(path=CHROMA_DIR)
 
 
+@st.cache_resource
 def get_collection():
     client = get_chroma_client()
     return client.get_or_create_collection(
